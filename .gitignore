@@ -1,2 +1,7 @@
+/vendor/
 .env
-vendor/
+docker-compose.override.yml
+src/Views/twig_cache/
+src/Storage/users.json
+.idea/
+*.log
