@@ -1,0 +1,20 @@
+{
+    "name": "first_php/php-app",
+    "description": "My PHP Web Application",
+    "type": "project",
+    "require": {
+        "twig/twig": "^3.7",
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^6.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
