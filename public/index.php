@@ -1,54 +1,60 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Controllers\MainController;
 use App\Controllers\UserController;
-use App\Models\UserModel;
-use App\Storage\UserStorage;
+use App\Controllers\MainController;
+use Twig\Loader\FilesystemLoader;
+use Twig\Environment;
 
-$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+// Настройка CORS
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-// Обработка API-запросов
-if ($requestMethod === 'GET' && strpos($requestUri, '/users') === 0) {
-  $userModel = new UserModel();
-  $userStorage = new UserStorage();
-  $userController = new UserController($userModel, $userStorage);
-  $userController->handleUserData();
-  exit;
+// Обработка preflight запросов
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit();
 }
 
 // Инициализация Twig
-$loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../src/Views');
-$twig = new \Twig\Environment($loader, [
+$loader = new FilesystemLoader([
+  __DIR__ . '/../src/Views',
+  __DIR__ . '/../src/Views/partials'
+]);
+$twig = new Environment($loader, [
   'cache' => __DIR__ . '/../src/Views/twig_cache',
   'debug' => true
 ]);
 
-// Основная обработка запросов
-ob_start();
+// Маршрутизация
+$requestUri = $_SERVER['REQUEST_URI'];
+$request = parse_url($requestUri, PHP_URL_PATH);
 
 try {
-  $request = parse_url($requestUri, PHP_URL_PATH);
+  // Маршрутизация для API пользователей
+  if (strpos($request, '/users') === 0) {
+    $userController = new UserController();
+    $userController->handleRequest();
+    exit;
+  }
 
+  // Маршрутизация для Twig-рендеринга
   switch ($request) {
     case '/':
       (new MainController($twig))->render('layout.twig');
       break;
-    case '/user/save':
-      (new UserController())->save();
+    case '/user/form':
+      (new MainController($twig))->renderUserForm();
       break;
     default:
       (new MainController($twig))->error404();
       break;
   }
 } catch (Exception $e) {
-  ob_clean();
   header('HTTP/1.1 500 Internal Server Error');
   (new MainController($twig))->render('error.twig', [
     'error_code' => 500,
     'error_message' => 'Ошибка сервера: ' . $e->getMessage()
   ]);
 }
-
-ob_end_flush();

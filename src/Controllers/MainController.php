@@ -103,4 +103,9 @@ class MainController
   {
     return $_ENV['APP_DEBUG'] ?? false;
   }
+  public function renderUserForm()
+  {
+    // Создаем HTML-форму динамически через Twig
+    echo $this->twig->createTemplate('{{ include("user_form.html") }}')->render([]);
+  }
 }

@@ -4,78 +4,57 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Storage\UserStorage;
+use Twig\Environment as TwigEnvironment;
+use Twig\Loader\FilesystemLoader;
 
 class UserController
 {
   private UserModel $userModel;
   private UserStorage $userStorage;
+  private TwigEnvironment $twig;
 
-  public function __construct(UserModel $userModel, UserStorage $userStorage)
+  public function __construct()
   {
-    $this->userModel = $userModel;
-    $this->userStorage = $userStorage;
+    $this->userModel = new UserModel();
+    $this->userStorage = new UserStorage();
+
+    // Инициализация Twig
+    $loader = new FilesystemLoader([
+      __DIR__ . '/../Views',
+      __DIR__ . '/../Views/partials'
+    ]);
+    $this->twig = new Environment($loader, [
+      'debug' => true,
+      'cache' => false
+    ]);
   }
 
-  public function handleUserData()
-  {
-    // Обработка GET-запроса
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-      $action = $_GET['action'] ?? null;
-
-      switch ($action) {
-        case 'get':
-          $this->getUserData();
-          break;
-        case 'save':
-          $this->saveUserData();
-          break;
-        default:
-          $this->sendErrorResponse('Invalid action');
-      }
-    }
-  }
-
-  private function getUserData()
+  public function save()
   {
     try {
-      $users = $this->userStorage->getAllUsers();
-      $this->sendJsonResponse($users);
-    } catch (\Exception $e) {
-      $this->sendErrorResponse('Error retrieving user data: ' . $e->getMessage());
-    }
-  }
+      // Получаем данные из POST
+      $userData = $_POST;
 
-  private function saveUserData()
-  {
-    $requiredFields = ['name', 'email', 'age'];
-    $userData = [];
-
-    foreach ($requiredFields as $field) {
-      if (!isset($_GET[$field]) || empty($_GET[$field])) {
-        $this->sendErrorResponse("Missing or empty field: $field");
-      }
-      $userData[$field] = $_GET[$field];
-    }
-
-    try {
+      // Валидация данных
       $this->userModel->validate($userData);
-      $this->userStorage->saveUser($userData);
-      $this->sendJsonResponse(['status' => 'success', 'message' => 'User data saved']);
+
+      // Сохранение пользователя
+      $savedUser = $this->userStorage->saveUser($userData);
+
+      // Рендер страницы с сохраненным пользователем
+      echo $this->twig->render('user_save.twig', [
+        'user' => $savedUser
+      ]);
     } catch (\Exception $e) {
-      $this->sendErrorResponse('Error saving user data: ' . $e->getMessage());
+      // Обработка ошибок
+      echo $this->twig->render('error.twig', [
+        'error_message' => $e->getMessage()
+      ]);
     }
   }
 
-  private function sendJsonResponse($data, $statusCode = 200)
+  public function showForm()
   {
-    header('Content-Type: application/json');
-    http_response_code($statusCode);
-    echo json_encode($data);
-    exit;
-  }
-
-  private function sendErrorResponse($message, $statusCode = 400)
-  {
-    $this->sendJsonResponse(['error' => $message], $statusCode);
+    echo $this->twig->render('user_form.html');
   }
 }

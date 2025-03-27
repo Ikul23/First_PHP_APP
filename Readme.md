@@ -19,10 +19,12 @@ my_php_project/
 │ src/Views/
 ├── layout.twig
 ├── error.twig
+├── user_save.twig
 └── partials/
 ├── header.twig
 ├── footer.twig
 └── sidebar.twig
+└── user_form.html
 
 │ ├── Models/
 │ │ └── UserModel.php
