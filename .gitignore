@@ -5,3 +5,5 @@ src/Views/twig_cache/
 src/Storage/users.json
 .idea/
 *.log
+/logs/*
+!/logs/.gitkeep

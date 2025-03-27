@@ -8,6 +8,8 @@
     },
     "require": {
         "php": "^8.2",
-        "twig/twig": "^3.7"
+        "twig/twig": "^3.7",
+        "monolog/monolog": "^3.9",
+    "psr/log": "^3.0"
     }
 }

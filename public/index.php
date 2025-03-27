@@ -11,6 +11,14 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// Получаем путь и метод из текущего запроса
+$uri = $_SERVER['REQUEST_URI'];
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Диспетчеризация маршрутов
+$router = require_once __DIR__ . '/../src/Routes/routes.php';
+$router->dispatch($uri, $method);
+
 // Обработка preflight запросов
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(200);
