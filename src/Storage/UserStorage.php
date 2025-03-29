@@ -199,4 +199,9 @@ class UserStorage
       'trace' => $e->getTraceAsString()
     ]));
   }
+  public function isAdmin(int $userId): bool
+  {
+    $user = $this->getUserById($userId);
+    return $user['role'] === 'admin';
+  }
 }

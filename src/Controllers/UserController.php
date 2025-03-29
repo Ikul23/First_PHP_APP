@@ -116,4 +116,19 @@ class UserController
       ]);
     }
   }
+  public function editUserForm(int $userId): Response
+  {
+    $user = $this->userStorage->getUserById($userId);
+    return $this->render('user/edit_form.twig', ['user' => $user]);
+  }
+
+  public function deleteUser(int $userId): JsonResponse
+  {
+    try {
+      $this->userStorage->deleteUser($userId);
+      return new JsonResponse(['success' => true]);
+    } catch (\Exception $e) {
+      return new JsonResponse(['error' => $e->getMessage()], 500);
+    }
+  }
 }

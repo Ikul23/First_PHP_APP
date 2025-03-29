@@ -11,14 +11,6 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
-// Получаем путь и метод из текущего запроса
-$uri = $_SERVER['REQUEST_URI'];
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Диспетчеризация маршрутов
-$router = require_once __DIR__ . '/../src/Routes/routes.php';
-$router->dispatch($uri, $method);
-
 // Обработка preflight запросов
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(200);
@@ -35,26 +27,39 @@ $twig = new Environment($loader, [
   'debug' => true
 ]);
 
-// Маршрутизация
-$requestUri = $_SERVER['REQUEST_URI'];
-$request = parse_url($requestUri, PHP_URL_PATH);
+// Получаем путь запроса
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$method = $_SERVER['REQUEST_METHOD'];
 
 try {
-  // Маршрутизация для API пользователей
-  if (strpos($request, '/users') === 0) {
-    $userController = new UserController();
-    $userController->handleRequest();
-    exit;
-  }
-
-  // Маршрутизация для Twig-рендеринга
-  switch ($request) {
+  // Основная маршрутизация
+  switch ($requestUri) {
     case '/':
       (new MainController($twig))->render('layout.twig');
       break;
+
+    case '/users':
+      if ($method === 'GET') {
+        (new UserController($twig))->listUsers();
+      } else {
+        (new MainController($twig))->error404();
+      }
+      break;
+
     case '/user/form':
       (new MainController($twig))->renderUserForm();
       break;
+
+    // API Endpoints
+    case preg_match('/\/users\/(\d+)\/delete/', $requestUri) ? true : false:
+      if ($method === 'DELETE') {
+        $userId = (int) preg_replace('/\/users\/(\d+)\/delete/', '$1', $requestUri);
+        (new UserController())->deleteUser($userId);
+      } else {
+        (new MainController($twig))->error404();
+      }
+      break;
+
     default:
       (new MainController($twig))->error404();
       break;
